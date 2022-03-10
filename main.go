@@ -20,19 +20,16 @@ type noWhitespaceWriter struct {
 }
 
 func (nw noWhitespaceWriter) Write(p []byte) (n int, err error) {
-	var cr int // characters removed
-	np := make([]byte, len(p))
-	for i, c := range p {
+	whitespaceRemoved := p[:0]
+	for _, c := range p {
 		switch c {
 		case '\n', ' ', '\t', '\r':
-			cr++
 			continue
+		default:
+			whitespaceRemoved = append(whitespaceRemoved, c)
 		}
-		np[i-cr] = c
 	}
-	bw, err := nw.Writer.Write(np[0 : len(np)-cr])
-	if err != nil {
-		return bw, err
-	}
-	return bw + cr, err
+	diff := len(p) - len(whitespaceRemoved)
+	n, err = nw.Writer.Write(whitespaceRemoved)
+	return n + diff, err
 }
